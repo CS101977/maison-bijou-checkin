@@ -172,6 +172,8 @@ def create_booking():
     room_key = data.get("room")
     check_in = data.get("checkIn")
     check_out = data.get("checkOut")
+    tourist_tax = data.get("touristTax")  # importo in euro, es. 10.50
+    payment_link = (data.get("paymentLink") or "").strip()  # link SumUp
 
     if not guest_name:
         return jsonify({"error": "guestName obbligatorio"}), 400
@@ -179,6 +181,16 @@ def create_booking():
         return jsonify({"error": f"room non valida. Usa: {ROOMS}"}), 400
     if not check_in or not check_out:
         return jsonify({"error": "checkIn e checkOut obbligatori"}), 400
+
+    # Normalizza importo tassa (opzionale)
+    tourist_tax_value = None
+    if tourist_tax is not None and str(tourist_tax).strip() != "":
+        try:
+            tourist_tax_value = round(float(str(tourist_tax).replace(",", ".")), 2)
+            if tourist_tax_value < 0:
+                return jsonify({"error": "Importo tassa non valido"}), 400
+        except ValueError:
+            return jsonify({"error": "Importo tassa non valido"}), 400
 
     try:
         start_ms = int(datetime.fromisoformat(check_in).timestamp() * 1000)
@@ -232,6 +244,8 @@ def create_booking():
         "codeIngresso": code_ingresso,
         "codeCamera": code_camera,
         "roomCodeValidUntil": room_valid_until,
+        "touristTax": tourist_tax_value,
+        "paymentLink": payment_link or None,
         "keyboardPwdIdIngresso": res_ing["keyboardPwdId"],
         "keyboardPwdIdCamera": res_cam["keyboardPwdId"],
         "createdAt": datetime.now().isoformat(),
