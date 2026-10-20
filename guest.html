@@ -113,6 +113,24 @@
       </div>
     </div>
 
+    <!-- Tassa di soggiorno / pagamento -->
+    <div id="taxSection" class="hidden bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden">
+      <div class="bg-emerald-600 text-white px-5 py-3 flex items-center gap-2">
+        <i class="fa-solid fa-receipt"></i>
+        <span class="font-semibold text-sm" data-i18n="touristTaxTitle">Tassa di soggiorno</span>
+      </div>
+      <div class="p-5">
+        <p class="text-sm text-slate-600 mb-1" data-i18n="touristTaxDesc">Importo da pagare online prima o all’arrivo:</p>
+        <p class="text-3xl font-bold text-slate-900 mb-4">€ <span id="taxAmount">0.00</span></p>
+        <a id="payButton" href="#" target="_blank" rel="noopener"
+           class="block w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3.5 rounded-xl transition">
+          <i class="fa-solid fa-credit-card mr-2"></i>
+          <span data-i18n="payNow">Paga la tassa di soggiorno</span>
+        </a>
+        <p class="text-xs text-slate-400 mt-3 text-center" data-i18n="payNote">Pagamento sicuro tramite SumUp</p>
+      </div>
+    </div>
+
     <!-- Video -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
       <div class="px-5 pt-4 pb-2 flex items-center gap-2">
@@ -257,6 +275,10 @@
         yourCodes: "I tuoi codici di accesso", entranceDoor: "Porta d'ingresso", room: "Camera",
         validFrom: "Valido dal", to: "→", entranceValid: "Ingresso valido",
         roomCodeNote: "⚠️ Codice camera valido solo per 24 ore dal check-in. Poi usa la scheda.",
+        touristTaxTitle: "Tassa di soggiorno",
+        touristTaxDesc: "Importo da pagare online prima o all’arrivo:",
+        payNow: "Paga la tassa di soggiorno",
+        payNote: "Pagamento sicuro tramite SumUp",
         howToOpen: "Come aprire le porte",
         videoDesc: "Guarda questo breve video prima di arrivare: ti mostra esattamente come usare i codici e la scheda.",
         usefulInfo: "Informazioni utili", howToGet: "Come arrivare", beach: "Spiaggia", houseRules: "Regole casa",
@@ -278,6 +300,10 @@
         yourCodes: "Your access codes", entranceDoor: "Entrance door", room: "Room",
         validFrom: "Valid from", to: "→", entranceValid: "Entrance valid",
         roomCodeNote: "⚠️ Room code valid only for 24 hours from check-in. Then use the key card.",
+        touristTaxTitle: "Tourist tax",
+        touristTaxDesc: "Amount to pay online before or on arrival:",
+        payNow: "Pay the tourist tax",
+        payNote: "Secure payment via SumUp",
         howToOpen: "How to open the doors",
         videoDesc: "Watch this short video before you arrive: it shows you exactly how to use the codes and the key card.",
         usefulInfo: "Useful information", howToGet: "How to get here", beach: "Beach", houseRules: "House rules",
@@ -336,6 +362,16 @@
         document.getElementById('codeCamera').textContent = b.codeCamera;
         document.getElementById('validFrom').textContent = formatDate(b.checkIn);
         document.getElementById('validTo').textContent = formatDate(b.checkOut);
+        // Tassa di soggiorno + link SumUp
+        if (b.touristTax != null && b.paymentLink) {
+          document.getElementById('taxAmount').textContent = Number(b.touristTax).toFixed(2);
+          document.getElementById('payButton').href = b.paymentLink;
+          document.getElementById('taxSection').classList.remove('hidden');
+        } else if (b.touristTax != null) {
+          document.getElementById('taxAmount').textContent = Number(b.touristTax).toFixed(2);
+          document.getElementById('payButton').classList.add('hidden');
+          document.getElementById('taxSection').classList.remove('hidden');
+        }
         document.getElementById('app').classList.remove('hidden');
       })
       .catch(() => {
