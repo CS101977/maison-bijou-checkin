@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maison Bijou – Dashboard Host</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+  <header class="bg-indigo-700 text-white px-6 py-4 shadow">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-gem text-xl"></i>
+        <div>
+          <h1 class="font-bold text-lg">Maison Bijou</h1>
+          <p class="text-indigo-200 text-xs">Dashboard Host · Check-in</p>
+        </div>
+      </div>
+      <span id="status" class="text-xs bg-indigo-500 px-3 py-1 rounded-full">Connessione...</span>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-6 space-y-8">
+
+    <!-- Form nuova prenotazione -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+      <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-plus-circle text-indigo-600"></i>
+        Nuova prenotazione
+      </h2>
+
+      <form id="bookingForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Nome ospite *</label>
+          <input type="text" id="guestName" required placeholder="Es. Marco Rossi"
+            class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Camera *</label>
+          <select id="room" required
+            class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+            <option value="">Seleziona camera...</option>
+            <option value="acqua_marina">Acqua Marina</option>
+            <option value="ambra">Ambra</option>
+            <option value="andalusite">Andalusite</option>
+            <option value="diamante">Diamante</option>
+            <option value="smeraldo">Smeraldo</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Check-in *</label>
+          <input type="datetime-local" id="checkIn" required
+            class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Check-out *</label>
+          <input type="datetime-local" id="checkOut" required
+            class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div class="md:col-span-2 flex gap-3 pt-2">
+          <button type="submit" id="btnSubmit"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50">
+            <i class="fa-solid fa-key"></i>
+            Genera codici e crea prenotazione
+          </button>
+        </div>
+      </form>
+
+      <div id="result" class="hidden mt-5 p-4 rounded-xl border"></div>
+    </section>
+
+    <!-- Elenco prenotazioni -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-list text-indigo-600"></i>
+          Prenotazioni
+        </h2>
+        <button onclick="loadBookings()" class="text-sm text-indigo-600 hover:underline">
+          <i class="fa-solid fa-rotate"></i> Aggiorna
+        </button>
+      </div>
+      <div id="bookingsList" class="space-y-3">
+        <p class="text-slate-400 text-sm">Caricamento...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const API = '';
+
+    // Default dates: oggi 15:00 → dopodomani 10:00
+    function setDefaultDates() {
+      const now = new Date();
+      const checkIn = new Date(now);
+      checkIn.setHours(15, 0, 0, 0);
+      if (now.getHours() >= 15) checkIn.setDate(checkIn.getDate() + 1);
+
+      const checkOut = new Date(checkIn);
+      checkOut.setDate(checkOut.getDate() + 2);
+      checkOut.setHours(10, 0, 0, 0);
+
+      document.getElementById('checkIn').value = toLocal(checkIn);
+      document.getElementById('checkOut').value = toLocal(checkOut);
+    }
+    function toLocal(d) {
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    setDefaultDates();
+
+    // Health check
+    fetch(API + '/api/health')
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('status').textContent = 'API OK · ' + d.locks + ' serrature';
+        document.getElementById('status').className = 'text-xs bg-green-500 px-3 py-1 rounded-full';
+      })
+      .catch(() => {
+        document.getElementById('status').textContent = 'API offline';
+        document.getElementById('status').className = 'text-xs bg-red-500 px-3 py-1 rounded-full';
+      });
+
+    // Submit
+    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmit');
+      const result = document.getElementById('result');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generazione codici...';
+      result.classList.add('hidden');
+
+      const payload = {
+        guestName: document.getElementById('guestName').value.trim(),
+        room: document.getElementById('room').value,
+        checkIn: document.getElementById('checkIn').value,
+        checkOut: document.getElementById('checkOut').value,
+      };
+
+      try {
+        const res = await fetch(API + '/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.error || 'Errore sconosciuto');
+
+        const b = data.booking;
+        result.className = 'mt-5 p-4 rounded-xl border border-green-200 bg-green-50';
+        result.innerHTML = `
+          <p class="font-semibold text-green-800 mb-2"><i class="fa-solid fa-check-circle"></i> Prenotazione creata!</p>
+          <div class="grid grid-cols-2 gap-2 text-sm text-slate-700 mb-3">
+            <div>Ospite: <strong>${b.guestName}</strong></div>
+            <div>Camera: <strong>${b.roomName}</strong></div>
+            <div>Ingresso: <strong class="text-2xl tracking-widest">${b.codeIngresso}</strong></div>
+            <div>Camera: <strong class="text-2xl tracking-widest">${b.codeCamera}</strong></div>
+          </div>
+          <p class="text-sm text-slate-600 mb-2">Link ospite (invialo via WhatsApp/email):</p>
+          <div class="flex gap-2">
+            <input id="guestLink" readonly value="${location.origin}/guest/${b.id}"
+              class="flex-1 border rounded-lg px-3 py-2 text-sm bg-white">
+            <button onclick="navigator.clipboard.writeText(document.getElementById('guestLink').value)"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm">Copia</button>
+          </div>
+        `;
+        result.classList.remove('hidden');
+        document.getElementById('guestName').value = '';
+        loadBookings();
+      } catch (err) {
+        result.className = 'mt-5 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700';
+        result.innerHTML = `<i class="fa-solid fa-exclamation-triangle"></i> ${err.message}`;
+        result.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-key"></i> Genera codici e crea prenotazione';
+      }
+    });
+
+    async function loadBookings() {
+      const el = document.getElementById('bookingsList');
+      try {
+        const res = await fetch(API + '/api/bookings');
+        const data = await res.json();
+        if (!data.bookings || data.bookings.length === 0) {
+          el.innerHTML = '<p class="text-slate-400 text-sm">Nessuna prenotazione ancora.</p>';
+          return;
+        }
+        el.innerHTML = data.bookings.map(b => `
+          <div class="border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p class="font-medium text-slate-800">${b.guestName} · <span class="text-indigo-600">${b.roomName}</span></p>
+              <p class="text-xs text-slate-500">${formatDate(b.checkIn)} → ${formatDate(b.checkOut)}</p>
+              <p class="text-sm mt-1">
+                Ingresso <strong class="tracking-wider">${b.codeIngresso}</strong>
+                &nbsp;·&nbsp;
+                Camera <strong class="tracking-wider">${b.codeCamera}</strong>
+              </p>
+            </div>
+            <a href="/guest/${b.id}" target="_blank"
+              class="text-sm bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg text-slate-700 whitespace-nowrap">
+              Apri pagina ospite
+            </a>
+          </div>
+        `).join('');
+      } catch {
+        el.innerHTML = '<p class="text-red-500 text-sm">Errore caricamento</p>';
+      }
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+
+    loadBookings();
+  </script>
+</body>
+</html>
