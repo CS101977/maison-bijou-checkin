@@ -67,6 +67,20 @@
             class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
 
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Tassa di soggiorno (€)</label>
+          <input type="number" id="touristTax" step="0.01" min="0" placeholder="Es. 10.00"
+            class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+          <p class="text-xs text-slate-400 mt-1">Opzionale – importo totale da far pagare all’ospite</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Link pagamento SumUp</label>
+          <input type="url" id="paymentLink" placeholder="https://pay.sumup.com/..."
+            class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+          <p class="text-xs text-slate-400 mt-1">Crea il link su SumUp e incollalo qui</p>
+        </div>
+
         <div class="md:col-span-2 flex gap-3 pt-2">
           <button type="submit" id="btnSubmit"
             class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50">
@@ -146,6 +160,8 @@
         room: document.getElementById('room').value,
         checkIn: document.getElementById('checkIn').value,
         checkOut: document.getElementById('checkOut').value,
+        touristTax: document.getElementById('touristTax').value,
+        paymentLink: document.getElementById('paymentLink').value.trim(),
       };
 
       try {
@@ -167,6 +183,7 @@
             <div>Camera: <strong>${b.roomName}</strong></div>
             <div>Ingresso: <strong class="text-2xl tracking-widest">${b.codeIngresso}</strong></div>
             <div>Camera: <strong class="text-2xl tracking-widest">${b.codeCamera}</strong></div>
+            ${b.touristTax != null ? `<div class="col-span-2">Tassa soggiorno: <strong>€ ${Number(b.touristTax).toFixed(2)}</strong>${b.paymentLink ? ' · link pagamento inserito' : ''}</div>` : ''}
           </div>
           <p class="text-sm text-slate-600 mb-2">Link ospite (invialo via WhatsApp/email):</p>
           <div class="flex gap-2">
@@ -178,6 +195,8 @@
         `;
         result.classList.remove('hidden');
         document.getElementById('guestName').value = '';
+        document.getElementById('touristTax').value = '';
+        document.getElementById('paymentLink').value = '';
         loadBookings();
       } catch (err) {
         result.className = 'mt-5 p-4 rounded-xl border border-red-200 bg-red-50 text-red-700';
@@ -207,6 +226,7 @@
                 Ingresso <strong class="tracking-wider">${b.codeIngresso}</strong>
                 &nbsp;·&nbsp;
                 Camera <strong class="tracking-wider">${b.codeCamera}</strong>
+                ${b.touristTax != null ? ` &nbsp;·&nbsp; Tassa <strong>€${Number(b.touristTax).toFixed(2)}</strong>` : ''}
               </p>
             </div>
             <a href="/guest/${b.id}" target="_blank"
