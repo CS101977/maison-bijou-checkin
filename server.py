@@ -17,7 +17,8 @@ from pathlib import Path
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
-app = Flask(__name__, static_folder="static")
+# File HTML e video sono nella root del progetto (struttura piatta su GitHub)
+app = Flask(__name__, static_folder=".", static_url_path="")
 CORS(app)
 
 # ---------- Config (da variabili d'ambiente in produzione) ----------
@@ -286,24 +287,20 @@ def test_code():
         return jsonify({"error": str(e), "success": False}), 500
 
 
-# Serve frontend
+# Serve frontend (file nella root del repo)
 @app.route("/")
 def index():
-    return send_from_directory("static", "host.html")
+    return send_from_directory(".", "host.html")
 
 
 @app.route("/guest/<booking_id>")
 def guest_page(booking_id):
-    return send_from_directory("static", "guest.html")
-
-
-@app.route("/static/<path:path>")
-def static_files(path):
-    return send_from_directory("static", path)
+    return send_from_directory(".", "guest.html")
 
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
     print("\n🏠 Maison Bijou Check-in Server")
-    print("   Host dashboard:  http://localhost:5000/")
-    print("   API health:      http://localhost:5000/api/health\n")
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    print(f"   Host dashboard:  http://localhost:{port}/")
+    print(f"   API health:      http://localhost:{port}/api/health\n")
+    app.run(host="0.0.0.0", port=port, debug=False)
